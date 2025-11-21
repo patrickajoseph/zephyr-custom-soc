@@ -53,9 +53,24 @@ The family SoC subdirectory ([${ZEPHYR_BASE}/zephyr/soc/cmcu/cmcuf/cmcus]) conta
 
 [2] Create the SoC specific pin control device tree source include file & SDK support for the SoC
 
+Each vendor provides HAL support for their SoC in ${ZEPHYR_BASE}/../modules/hal. For this demonstration, the HAL support is provided 
+under ${ZEPHYR_BASE}/../modules/hal/cmcu. 
 
+This directory contains the following files and directories:
+1. CMakeLists.txt            --      Adds CMakeLists.txt in subdirectories to the build.
+2. dts                       --      Contains the pin control device tree source include file.
+3. module.yml                --      This YML file is required to let Zephyr know that this is an external module.
+4. LICENSE                   --      Simple license file.
+5. README.rst                --      HAL documentation.
+6. cmcu_sdk                  --      This is the custom SoC SDK which contains a header file containing the registers of the SoC.
+
+Once steps [1] and [2] are done goto ${ZEPHYR_BASE} are run the command shown in the image.
+
+<img width="1477" height="87" alt="image" src="https://github.com/user-attachments/assets/2a3b359b-6bdf-4b49-98c4-21bcbba18585" />
+
+The SoC must now be detectable.
  
-[1] Develop the required DTS binding files for the peripherals of the SoC under [${ZEPHYR_BASE}/zephyr/dts/bindings].
+[3] Develop the required DTS binding files for the peripherals of the SoC under [${ZEPHYR_BASE}/zephyr/dts/bindings].
    The following YAML files for DTS binding files were created for the custom MCU:
 
 ./mtd/cmcu,cmcu-nv-flash-base.yaml
@@ -79,7 +94,7 @@ The YAML files for DTS binding describe the properties under the node with the s
 has a compatible property. When processing the devicetree of the SoC, the build system looks for a suitable YAML DTS binding file. For
 this demonstration, the STM32 YAML DTS binding files are reused.
 
-[2] Write the device tree source and device tree include files for the SoC
+[4] Write the device tree source and device tree include files for the SoC
 
 The DTS files for the SoC have to be created under []${ZEPHYR_BASE}/zephyr/dts/arm/cmcu/cmcus/].
 Two files named [cmcus.dtsi] and [cmcusoc.dtsi] were created, one for the SoC series and one for the SoC.
