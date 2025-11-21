@@ -8,12 +8,12 @@ The custom soc vendor is referred to as **cmcu**. The family to which the custom
 
 # Bring-up procedure
 
-[1] Define SoCs specific files under [${ZEPHYR_BASE}/zephyr/soc/cmcu/cmcuf] and [${ZEPHYR_BASE}/zephyr/soc/cmcu/cmcuf/cmcus]
+[1] Define SoCs specific files under ${ZEPHYR_BASE}/zephyr/soc/cmcu/cmcuf and ${ZEPHYR_BASE}/zephyr/soc/cmcu/cmcuf/cmcus
 
 **cmcu** stands for custom mcu and cmcu is the vendor name. A SoC family named **cmcuf** (custom MCU family) is provided by
 the vendor **cmcu**. Under the custom MCU family, there is a SoC series named **cmcus**.
 
-The family SoC subdirectory ([${ZEPHYR_BASE}/zephyr/soc/cmcu/cmcuf]) contains the following files:
+The family SoC subdirectory [${ZEPHYR_BASE}/zephyr/soc/cmcu/cmcuf] contains the following files:
 
 1. CMakeLists.txt             --      Includes all .c and .h files required for SoC configuration.
 2. Kconfig                    --      Defines the property SOC_FAMILY_<SOC_FAMILY> (in this case SOC_FAMILY_CMCU) which is used for
@@ -34,7 +34,7 @@ family:
 
 This describes basic information about the SoC.
 
-The family SoC subdirectory ([${ZEPHYR_BASE}/zephyr/soc/cmcu/cmcuf/cmcus]) contains the following files:
+The family SoC subdirectory [${ZEPHYR_BASE}/zephyr/soc/cmcu/cmcuf/cmcus] contains the following files:
 
 1. CMakeLists.txt            --      Adds all the C include and source files to the build and invokes the linker.
 2. Kconfig                   --      This configuration file selects architecture specific symbols for the SoC.
@@ -70,7 +70,7 @@ Once steps [1] and [2] are done goto ${ZEPHYR_BASE} are run the command shown in
 
 The SoC must now be detectable.
  
-[3] Develop the required DTS binding files for the peripherals of the SoC under [${ZEPHYR_BASE}/zephyr/dts/bindings].
+[3] Develop the required DTS binding files for the peripherals of the SoC under ${ZEPHYR_BASE}/zephyr/dts/bindings.
    The following YAML files for DTS binding files were created for the custom MCU:
 
 ./mtd/cmcu,cmcu-nv-flash-base.yaml
@@ -87,7 +87,6 @@ The SoC must now be detectable.
 ./reset/cmcu,cmcu-rcc-rctl.yaml
 ./interrupt-controller/cmcu,cmcu-exti.yaml
 
-
 <img width="1102" height="320" alt="image" src="https://github.com/user-attachments/assets/f903de35-8d74-4700-97f7-22a0c768172d" />
 
 The YAML files for DTS binding describe the properties under the node with the specified **compatible**. Each node in the devicetree
@@ -96,12 +95,31 @@ this demonstration, the STM32 YAML DTS binding files are reused.
 
 [4] Write the device tree source and device tree include files for the SoC
 
-The DTS files for the SoC have to be created under []${ZEPHYR_BASE}/zephyr/dts/arm/cmcu/cmcus/].
-Two files named [cmcus.dtsi] and [cmcusoc.dtsi] were created, one for the SoC series and one for the SoC.
-Two helper header files [cmcu_clock.h] and [cmcu_reset.h] ( present in ${ZEPHYR_BASE}/include/zephyr/dt-bindings/clock/cmcu_clock.h & 
+The DTS files for the SoC have to be created under ${ZEPHYR_BASE}/zephyr/dts/arm/cmcu/cmcus/.
+Two files named cmcus.dtsi and cmcusoc.dtsi were created, one for the SoC series and one for the SoC.
+Two helper header files cmcu_clock.h and cmcu_reset.h ( present in ${ZEPHYR_BASE}/include/zephyr/dt-bindings/clock/cmcu_clock.h & 
 ${ZEPHYR_BASE}/include/zephyr/dt-bindings/clock/cmcu_reset.h ) are used. The two header files contain help macros CMCU_CLOCK and
 CMCU_RESET. The compatible property for each node was updated to use the custom mcu device tree bindings.
 
-[cmcus.dtsi] --> custom SoC series peripheral device tree.
-[cmcusoc.dtsi] --> custom SoC specific device tree settings.
+cmcus.dtsi -- custom SoC series peripheral device tree.
+cmcusoc.dtsi -- custom SoC specific device tree settings.
 . 
+[5] Create the board speific files under ${ZEPHYR_BOARD}/boards/cmcu/cmcu_board
+
+The following files are created under the boards directory:
+
+1.  board.cmake            --        The board.cmake file is used to configure the Zephyr runner settings which is used to flash
+                                     the firmware into the MCU.
+2.  board.yaml             --        Defines the SoC(s) used in the board, the vendor and the name of the board. When using the west build command,
+                                     the name of the board given in this .yml file is used.
+3.  cmcu_board.dts          --       This is the board DTS file. This file defines the basic pin configurations for the SoC, clock settings of the MCU etc.
+                                     This DTS file includes the pin control DTSI provided by the vendor in ${ZEPHYR_BASE}/../modules/hal/cmcu/dts/cmcus/cmcu-pinctrl.dtsi
+                                     and the DTSI in the zephyr DTS subdirectory ${ZEPHYR_BASE}/zephyr/dts/arm/cmcu/cmcus/cmcus.dtsi.
+4.  cmcu_board.yaml        --        This is a YAML file describing the type of device, supported peripherals, RAM and FLASH etc.
+5.  cmcu_board_defconfig   --        Selects basic configuration setting to get the board working (such as serial peripheral, UART console etc.)
+6.  Kconfig.cmcu_board     --        This file contains the configuration variable BOARD_<BOARD_NAME> (BOARD_CMCU_BOARD in this case) which, when selected, selects the SoC
+                                      symbol SOC_<SOC> (SOC_CMCUSOC) which then configures the SoC related symbols.
+
+Once steps [1] - [4] are done, run the following command as check if the created board is getting recogonised.
+
+<img width="1477" height="87" alt="image" src="https://github.com/user-attachments/assets/3632a0aa-f529-4bac-84d2-c5970f951f44" />
