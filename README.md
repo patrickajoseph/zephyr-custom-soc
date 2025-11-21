@@ -6,6 +6,10 @@ driver support for SoC (clock-control, serial, gpio, pinctrl, interrupt-controll
 The custom soc vendor is referred to as **cmcu**. The family to which the custom soc belongs is **cmcuf** and the series is
 **cmcus**.
 
+# Setup procedure
+
+The experimental code is present in ${ZEPHYR_BASE}
+
 # Bring-up procedure
 
 [1] Define SoCs specific files under ${ZEPHYR_BASE}/zephyr/soc/cmcu/cmcuf and ${ZEPHYR_BASE}/zephyr/soc/cmcu/cmcuf/cmcus
@@ -131,5 +135,88 @@ There are 2 basic requirements for a driver to be recogonized by the zephyr buil
 2. A C source file with "#define DT_DRV_COMPAT <compatible>" where <compatible> is the compatible name defined
    in the driver's device tree binding yaml file. The driver has to be placed under ${ZEPHYR_BASE}/zephyr/drivers/<driver_name>/<driver_name>_<soc_name>.c
    For example for uart driver there should be a DTS binding yaml file ${ZEPHYR_BASE}/dts/bindings/cmcu/uart/cmcu,cmcu-uart.yaml. Then create a driver source file
-   under ${ZEPHYR_BASE}/drivers/serial/uart_cmcu.c. The first line of the source file must be #define DT_DRV_COMPAT cmcu_cmcu_uart
+   under ${ZEPHYR_BASE}/drivers/serial/uart_cmcu.c. The first line of the source file must be #define DT_DRV_COMPAT cmcu_cmcu_uart.
 
+Each driver repository consists of a common Kconfig file and Kconfig file for each SoC and a CMakeLists.txt file.
+The common Kconfig file sources all the induvidual Kconfig files to the build system. The soc specific Kconfig file defines a defines a SoC specific property which is enabled
+only if the node having the required compatible property is defined and enabled in the DTS. The CMakeLists.txt file consists of conditional sources which sources the required
+C source files only if the SoC specific driver property is selected.
+
+For example: For the serial driver of the custom SoC, a seperate Kconfig file is created under ${ZEPHYR_BASE}/drivers/serial/Kconfig.cmcu which defines a configuration 
+UART_CMCU. This symbol has a default value of 'y' and is selected only if the compatible node "cmcu,cmcu-uart" is defined and its status is set to "okay". Since UART_CMCU
+is set to 'y', the custom SoC specific serial driver (uart_cmcu.c) C source code is selected and built.
+
+For an SoC to get up and working, the following drivers have to be enabled:
+1. clock-control         --    For setting up system clock and enabling/disabling different clock domains and clock gating.
+                               Used by every other SoC driver.
+3. pinctrl               --    To map a pin of the SoC to a particular peripheral.
+4. gpio                  --    Essential for controlling the GPIO pins of the SoC. This driver is also used by pinctrl
+                               to configure pin functionality.
+5. interrupt-controller  --    Controls the interrupts in the SoC. Enables/disables interrupts.
+6. serial                --    Required for getting debug logs from the SoC via UART interface.
+
+ In this repository all the above drivers have been developed to perform basic functionalities to make the SoC up and running.
+
+**How are drivers source code organized**
+
+Each driver C source code file has a DT_DRV_COMPAT which is defined value as the compatible for the device/peripheral and it has to be defined as the first line in the C
+source code. Failing to do so does not include the device driver in the build process.
+
+Each device in Zephyr can be described by the device structure.
+
+```
+struct device{
+    const void* config;
+    void* data;
+    const void* api;
+    const char* name;
+};
+
+```
+
+The device.config holds configuration data parsed from the device-tree during build time. The config struct for the device has to be defined in a seperate header file.
+The device.data holds run-time configuration & state monitoring variables of the device. The device.api points to the struct containing callbacks for the driver API.
+The driver API for the particular SoC is defined using DEVICE_API. In addition to driver initialization function, there can also be a power-management initialization
+function for the SoC (which is NOT covered in this repository).
+
+Each instance of the compatible driver is initialized using DEVICE_DT_INST_DEFINE which initializes an instance of the compatible driver. This macro takes the following
+arguments:
+1. Initialization function
+2. Power management function
+3. Driver data structure initialized during build time.
+4. Driver configuration structure initialized during build time.
+5. Stage of initialzation (PRE_KERNEL_1, PRE_KERNEL_2, POST_KERNEL)
+6. Initialization priority.
+7. Address of driver API.
+
+Calling DEVICE_DT_INST_DEFINE initialzes a device structure during build time.
+
+**Importance of device.api**
+
+Consider the serial driver. The serial driver is included in the application code as ``` #define <zephyr/driver/uart.h> ```.
+
+All functions defined in uart.h are inline functions which take a pointer to the device, reference the API structure and calls the required
+API function using the function pointer.
+
+Snippet from ${ZEPHYR_BASE}/include/zephyr/drivers/uart/uart_internal.h
+
+```
+static inline int z_impl_uart_poll_in(const struct device *dev, unsigned char *p_char)
+{
+	const struct uart_driver_api *api = (const struct uart_driver_api *)dev->api;
+
+	if (api->poll_in == NULL) {
+		return -ENOSYS;
+	}
+
+	return api->poll_in(dev, p_char);
+}
+
+```
+  
+**Critical concepts required to understand SoC driver code**
+1. Device tree
+2. Kconfig
+3. Devicetree binding
+4. Devicetree API
+5. IRQ API
