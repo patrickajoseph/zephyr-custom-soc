@@ -53,7 +53,7 @@ The family SoC subdirectory [${ZEPHYR_BASE}/soc/cmcu/cmcuf/cmcus] contains the f
                                      It also defined the SoC specific symbols SOC_CMCUSOC and SOC_SERIES_CMCUS. It also defines the number of IRQs supported
                                      by the SoC using the symbol NUM_IRQS. 
 5. pinctrl_soc.h             --      This header file contains the pin control typedef pinctrl_soc_pin_t and utility macros for pin control. This header file
-                                     references another header file (${ZEPHYR_BASE}/include/zephyr/dt-bindings/pinctrl/cmcu_pinctrl.h) which contains
+                                     references another header file ${ZEPHYR_BASE}/include/zephyr/dt-bindings/pinctrl/cmcu_pinctrl.h which contains
                                      the important macro CMCU_PINMUX() which is a macro used in the pin control DTSI file present in
                                      ${ZEPHYR_BASE}/../modules/hal/cmcu/dts/cmcu/cmcus/cmcu-pinctrl.dtsi
 6. soc.c                     --      This is a C source file which contains a SoC initialization function named soc_early_init_hook() which is used to initialize
