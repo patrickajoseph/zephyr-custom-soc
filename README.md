@@ -123,3 +123,13 @@ The following files are created under the boards directory:
 Once steps [1] - [4] are done, run the following command as check if the created board is getting recogonised.
 
 <img width="1477" height="87" alt="image" src="https://github.com/user-attachments/assets/3632a0aa-f529-4bac-84d2-c5970f951f44" />
+
+[6] Understanding how drivers work in Zephyr
+
+There are 2 basic requirements for a driver to be recogonized by the zephyr build system:
+1. A driver DTS binding file defined under ${ZEPHYR_BASE}/dts/bindings/<driver_name>.
+2. A C source file with "#define DT_DRV_COMPAT <compatible>" where <compatible> is the compatible name defined
+   in the driver's device tree binding yaml file. The driver has to be placed under ${ZEPHYR_BASE}/zephyr/drivers/<driver_name>/<driver_name>_<soc_name>.c
+   For example for uart driver there should be a DTS binding yaml file ${ZEPHYR_BASE}/dts/bindings/cmcu/uart/cmcu,cmcu-uart.yaml. Then create a driver source file
+   under ${ZEPHYR_BASE}/drivers/serial/uart_cmcu.c. The first line of the source file must be #define DT_DRV_COMPAT cmcu_cmcu_uart
+
